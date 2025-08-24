@@ -4,7 +4,6 @@ from mcp.server.fastmcp import FastMCP
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
-import uuid
 import rpy2.robjects as robjects
 
 mcp_server = FastMCP("Plot")
@@ -29,14 +28,10 @@ def plot_python(req: CodeRequest) -> dict:
     :return: Dictionary with the path to the generated plot or an error message.
     """
     df = pd.read_csv(req.file_path) if req.file_path.endswith(".csv") else pd.read_excel(req.file_path)
-    context = {"df": df, "plt": plt}
+    context = {"df": df, "plt": plt, "plot_path": ""}
     try:
         exec(req.code, context)
-        plot_id = str(uuid.uuid4()) + ".png"
-        plot_path = os.path.join(OUTPUT_DIR, plot_id)
-        plt.savefig(plot_path)
-        plt.clf()
-        return {"plot_path": plot_path}
+        return {"plot_path": context["plot_path"]}
     except Exception as e:
         return {"error": str(e)}
 
@@ -74,11 +69,7 @@ def plot_r(req: CodeRequest) -> dict:
         else:
             robjects.r(f"""data <- readxl::read_excel('{req.file_path.replace('\\', '/')}')""")
 
-        plot_id = str(uuid.uuid4()) + ".png"
-        plot_path = os.path.abspath(os.path.join(OUTPUT_DIR, plot_id))
-        robjects.r(f"png('{plot_path.replace('\\', '/')}')")
-        robjects.r(req.code)
-        robjects.r("dev.off()")
+        plot_path = robjects.r(req.code)[0]
         return {"plot_path": plot_path}
     except Exception as e:
         return {"error": str(e)}
@@ -98,19 +89,20 @@ def install_python_library(library_name: str) -> dict:
     except subprocess.CalledProcessError as e:
         return {"error": str(e)}
 
-@mcp_server.tool()
-def install_r_library(library_name: str) -> dict:
-    """
-    Installs an R library using install.packages.
-
-    :param library_name: Name of the R library to install.
-    :return: Dictionary with success or error message.
-    """
-    try:
-        robjects.r(f"install.packages('{library_name}')")
-        return {"message": f"Successfully installed {library_name}"}
-    except Exception as e:
-        return {"error": str(e)}
+#TODO: Does not work yet, need to figure out how to install R packages in the MCP server environment
+#@mcp_server.tool()
+#def install_r_library(library_name: str) -> dict:
+#    """
+#    Installs an R library using install.packages.
+#
+#    :param library_name: Name of the R library to install.
+#    :return: Dictionary with success or error message.
+#    """
+#    try:
+#        robjects.r(f"install.packages('{library_name}')")
+#        return {"message": f"Successfully installed {library_name}"}
+#    except Exception as e:
+#        return {"error": str(e)}
 
 if __name__ == "__main__":
     mcp_server.run(transport="stdio")

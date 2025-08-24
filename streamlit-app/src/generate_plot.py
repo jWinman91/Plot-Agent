@@ -39,7 +39,7 @@ class GeneratePlot:
                 print(f"User prompt: {user_prompt}, uploaded file: {uploaded_file.name}")
                 try:
                     response_json = self._request_be.post("generate_plot", user_prompt, uploaded_file)
-                    plot_path = response_json.get("plot_path").replace("/", "_")
+                    plot_path = response_json.get("plot_path")
                     with st.container(border=True):
                         st.write(f"**Tool used:** {response_json['tool_used']}")
                         image = self._request_be.get(f"plot_path/{plot_path}/download")

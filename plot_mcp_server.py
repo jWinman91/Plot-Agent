@@ -89,20 +89,36 @@ def install_python_library(library_name: str) -> dict:
     except subprocess.CalledProcessError as e:
         return {"error": str(e)}
 
-#TODO: Does not work yet, need to figure out how to install R packages in the MCP server environment
+@mcp_server.tool()
 #@mcp_server.tool()
-#def install_r_library(library_name: str) -> dict:
-#    """
-#    Installs an R library using install.packages.
-#
-#    :param library_name: Name of the R library to install.
-#    :return: Dictionary with success or error message.
-#    """
-#    try:
-#        robjects.r(f"install.packages('{library_name}')")
-#        return {"message": f"Successfully installed {library_name}"}
-#    except Exception as e:
-#        return {"error": str(e)}
+def install_r_library(library_name: str, repo: str = "http://cran.us.r-project.org") -> dict:
+    """
+    Ensures an R library is installed. Installs it from the given repo if missing.
+
+    :param library_name: Name of the R library to install.
+    :param repo: CRAN repository URL.
+    :return: Dictionary with success or error message.
+    """
+    try:
+        import rpy2.robjects as ro
+        from rpy2.robjects.packages import isinstalled, importr
+        from rpy2.robjects.vectors import StrVector
+
+        utils = importr("utils")
+
+        if not isinstalled(library_name):
+            # Prevent interactive prompts
+            ro.r("options(ask=FALSE)")
+            # Install from CRAN
+            utils.install_packages(StrVector([library_name]),
+                                   repos=repo,
+                                   dependencies=True)
+            return {"message": f"Installed {library_name} from {repo}"}
+        else:
+            return {"message": f"{library_name} is already installed"}
+    except Exception as e:
+        return {"error": str(e)}
+
 
 if __name__ == "__main__":
     mcp_server.run(transport="stdio")

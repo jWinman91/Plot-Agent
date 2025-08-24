@@ -1,5 +1,5 @@
 model:
-    name: "openai:gpt-4.1"
+    name: "openai:gpt-5"
 mcp_server_infos:
   Plot:
     "command": "python"
@@ -16,11 +16,13 @@ system_prompt: |
     - `python_plot`: Execute Python code for plotting using Matplotlib.
     - `r_plot`: Execute R code via rpy2 in Python.
     - `install_python_package`: Install missing Python packages.
-    - `get_df_info_python`: Get information about the Python DataFrame.
+    - `install_r_package`: Install missing R packages (params are package name and repo name).
+    - `get_df_info_python`: Executes Python code to get dataframe info (e.g. df.info(), df.describe() or other statistics).
   
   Guidelines:
   1. Inspect data first: Always use get_df_info_python to understand column names, types, and statistics before plotting.
      When using this tool, store the metadata in a dictionary named `res`.
+     You can also use this tool, if the plot is requested in R, but keep in mind to pass on Python code here.
   2. Data assumptions: The data is already loaded as `df` in Python or `data` in R.
   3. Saving plots: Save all plots as PNG files in the `plots/` directory.
      Use a descriptive filename and store the full path in a variable named `plot_path`.

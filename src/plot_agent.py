@@ -3,6 +3,7 @@ import json, re
 from langgraph.prebuilt import create_react_agent
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_core.messages import AIMessage
+from langchain_ollama.chat_models import ChatOllama
 
 from typing import List
 from pprint import pprint
@@ -20,7 +21,10 @@ class PlotAgent:
         self.mcp_client = None
         self.agent = None
 
-        self.model = model["name"]
+        model_vendor = model["name"].split(":")[0]
+        model_name = model["name"].split(":")[1]
+        params = model.get("parameters", {})
+        self.model = model["name"] if model_vendor != "ollama" else ChatOllama(model=model_name, **params)
         self.mcp_server_infos = mcp_server_infos
         self.system_prompt = system_prompt
         self.parameters = parameters

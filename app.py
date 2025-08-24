@@ -94,14 +94,13 @@ class PlotAgentApp:
 
             return response_dict
 
-        @self.app.get("/plot_path/{plot_path}/download")
+        @self.app.get("/plot_path/{plot_path:path}/download")
         async def download_file(plot_path: str) -> FileResponse:
             """
             Endpoint to download a file.
             :param plot_path: Name of the file to download
             :return: FileResponse with the requested file
             """
-            plot_path = plot_path.replace("_", "/")  # Replace underscores with slashes to get the correct path
             if os.path.exists(plot_path):
                 return FileResponse(plot_path, media_type='image/png', filename=os.path.basename(plot_path))
             else:
